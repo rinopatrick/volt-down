@@ -63,8 +63,10 @@ async fn cancel_download(id: String, queue: State<'_, QueueState>) -> Result<(),
 async fn get_downloads(queue: State<'_, QueueState>) -> Result<Vec<DownloadView>, String> {
     let q = queue.lock().await;
     let mut views = Vec::new();
+    let mut seen_ids = std::collections::HashSet::new();
 
-    for task in q.get_pending().await {
+    for task in q.get_active().await {
+        seen_ids.insert(task.id.clone());
         views.push(DownloadView {
             id: task.id.clone(),
             filename: task.filename.clone(),
@@ -78,7 +80,23 @@ async fn get_downloads(queue: State<'_, QueueState>) -> Result<Vec<DownloadView>
         });
     }
 
-    // TODO: merge active downloads when state tracking is improved
+    for task in q.get_pending().await {
+        if seen_ids.contains(&task.id) {
+            continue;
+        }
+        views.push(DownloadView {
+            id: task.id.clone(),
+            filename: task.filename.clone(),
+            url: task.url.clone(),
+            total_size: task.total_size,
+            downloaded: task.downloaded,
+            status: task.status.to_string(),
+            speed_bps: 0.0,
+            progress_percent: task.progress_percent(),
+            created_at: task.created_at.to_rfc3339(),
+        });
+    }
+
     Ok(views)
 }
 
