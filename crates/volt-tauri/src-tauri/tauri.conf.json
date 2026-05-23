@@ -1,0 +1,33 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "VoltDown",
+  "version": "0.1.0",
+  "identifier": "com.voltdown.app",
+  "build": {
+    "beforeDevCommand": "python3 -m http.server 62830",
+    "frontendDist": "../",
+    "devUrl": "http://localhost:62830"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "VoltDown",
+        "width": 1000,
+        "height": 700,
+        "minWidth": 800,
+        "minHeight": 500,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["deb", "appimage", "msi", "dmg"],
+    "icon": []
+  }
+}

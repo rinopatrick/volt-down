@@ -1,0 +1,9 @@
+{
+  "name": "com.voltdown.native",
+  "description": "VoltDown Native Messaging Host",
+  "path": "/usr/local/bin/voltdown-native",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://*/"
+  ]
+}

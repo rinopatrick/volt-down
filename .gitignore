@@ -1,0 +1,8 @@
+/target/
+*.part
+*.part.state
+*.tmp
+.DS_Store
+100mb_random.bin
+404test.part
+404new.part

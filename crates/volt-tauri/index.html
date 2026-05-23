@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoltDown</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app">
+        <header>
+            <h1>⚡ VoltDown</h1>
+            <p class="subtitle">Fast, lightweight, open-source download manager</p>
+        </header>
+
+        <div class="add-download">
+            <input type="text" id="urlInput" placeholder="Paste download URL here..." />
+            <button id="addBtn">Add Download</button>
+        </div>
+
+        <div class="toolbar">
+            <button id="pauseAllBtn">Pause All</button>
+            <button id="resumeAllBtn">Resume All</button>
+            <button id="clearCompletedBtn">Clear Completed</button>
+        </div>
+
+        <div class="downloads-list" id="downloadsList">
+            <div class="empty-state" id="emptyState">
+                <p>No active downloads</p>
+                <p class="hint">Paste a URL above to start downloading</p>
+            </div>
+        </div>
+
+        <footer>
+            <span id="statusText">Ready</span>
+            <span id="speedText"></span>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

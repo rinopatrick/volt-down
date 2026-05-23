@@ -1,0 +1,76 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            artifact_suffix: linux-x86_64
+            bin_ext: ''
+          - os: macos-latest
+            artifact_suffix: macos-universal
+            bin_ext: ''
+          - os: windows-latest
+            artifact_suffix: windows-x86_64
+            bin_ext: '.exe'
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build release binaries
+        run: cargo build --release --workspace --bin voltdown --bin voltdown-native
+
+      - name: Smoke test voltdown
+        shell: bash
+        run: ./target/release/voltdown${{ matrix.bin_ext }} --help
+
+      - name: Smoke test voltdown-native
+        shell: bash
+        run: ./target/release/voltdown-native${{ matrix.bin_ext }} --help
+
+      - name: Package artifacts (unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp target/release/voltdown dist/
+          cp target/release/voltdown-native dist/
+          tar -czf voltdown-${{ github.ref_name }}-${{ matrix.artifact_suffix }}.tar.gz -C dist voltdown voltdown-native
+
+      - name: Package artifacts (windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Copy-Item target/release/voltdown.exe dist/
+          Copy-Item target/release/voltdown-native.exe dist/
+          Compress-Archive -Path dist/voltdown.exe,dist/voltdown-native.exe -DestinationPath voltdown-${{ github.ref_name }}-${{ matrix.artifact_suffix }}.zip
+
+      - name: Upload release asset (unix)
+        if: runner.os != 'Windows'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: voltdown-${{ github.ref_name }}-${{ matrix.artifact_suffix }}.tar.gz
+
+      - name: Upload release asset (windows)
+        if: runner.os == 'Windows'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: voltdown-${{ github.ref_name }}-${{ matrix.artifact_suffix }}.zip
