@@ -318,7 +318,11 @@ impl DownloadQueue {
                     if evt.total_size.is_some() {
                         t.total_size = evt.total_size;
                     }
-                    t.status = evt.status.clone();
+                    t.updated_at = chrono::Utc::now();
+                    if t.status != DownloadStatus::Paused && t.status != DownloadStatus::Cancelled
+                    {
+                        t.status = evt.status.clone();
+                    }
                 }
                 let _ = bridge_progress_tx.send(evt).await;
             }

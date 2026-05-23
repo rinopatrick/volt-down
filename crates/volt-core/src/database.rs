@@ -50,6 +50,12 @@ impl Database {
             );",
         )
         .map_err(|e| crate::VoltError::Database(e.to_string()))?;
+
+        // Backward-compatible migrations for existing databases.
+        // Ignore errors when columns already exist.
+        let _ = conn.execute("ALTER TABLE downloads ADD COLUMN metadata TEXT", []);
+        let _ = conn.execute("ALTER TABLE downloads ADD COLUMN proxy_url TEXT", []);
+        let _ = conn.execute("ALTER TABLE downloads ADD COLUMN cookies TEXT", []);
         Ok(())
     }
 

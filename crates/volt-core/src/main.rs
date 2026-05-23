@@ -164,13 +164,45 @@ async fn main() -> anyhow::Result<()> {
                     .and_then(|v| v.as_array())
                     .cloned()
                     .unwrap_or_default();
+                let completed = data
+                    .get("completed")
+                    .and_then(|v| v.as_array())
+                    .cloned()
+                    .unwrap_or_default();
+                let cancelled = data
+                    .get("cancelled")
+                    .and_then(|v| v.as_array())
+                    .cloned()
+                    .unwrap_or_default();
+                let failed = data
+                    .get("failed")
+                    .and_then(|v| v.as_array())
+                    .cloned()
+                    .unwrap_or_default();
                 println!("{:<36} {:<12} {:<8} {}", "ID", "STATUS", "PROG%", "URL");
-                for item in active.iter().chain(pending.iter()) {
+                for item in active
+                    .iter()
+                    .chain(pending.iter())
+                    .chain(completed.iter())
+                    .chain(cancelled.iter())
+                    .chain(failed.iter())
+                {
                     let id = item.get("id").and_then(|v| v.as_str()).unwrap_or("?");
                     let status = item.get("status").and_then(|v| v.as_str()).unwrap_or("?");
+                    let downloaded = item.get("downloaded").and_then(|v| v.as_u64()).unwrap_or(0);
+                    let total_size = item.get("total_size").and_then(|v| v.as_u64());
                     let pct = item
                         .get("progress_percent")
                         .and_then(|v| v.as_f64())
+                        .or_else(|| {
+                            total_size.map(|total| {
+                                if total > 0 {
+                                    (downloaded as f64 / total as f64) * 100.0
+                                } else {
+                                    0.0
+                                }
+                            })
+                        })
                         .unwrap_or(0.0);
                     let url = item.get("url").and_then(|v| v.as_str()).unwrap_or("?");
                     println!(
@@ -181,7 +213,12 @@ async fn main() -> anyhow::Result<()> {
                         &url[..url.len().min(50)]
                     );
                 }
-                if active.is_empty() && pending.is_empty() {
+                if active.is_empty()
+                    && pending.is_empty()
+                    && completed.is_empty()
+                    && cancelled.is_empty()
+                    && failed.is_empty()
+                {
                     println!("No downloads.");
                 }
             }
@@ -365,13 +402,21 @@ async fn list_downloads(
     let active = queue.get_active().await;
     let pending = queue.get_pending().await;
     let finished = queue.get_finished().await;
-    let (completed, failed): (Vec<_>, Vec<_>) = finished
-        .into_iter()
-        .partition(|t| t.status == DownloadStatus::Completed);
+    let mut completed = Vec::new();
+    let mut failed = Vec::new();
+    let mut cancelled = Vec::new();
+    for task in finished {
+        match task.status {
+            DownloadStatus::Completed => completed.push(task),
+            DownloadStatus::Cancelled => cancelled.push(task),
+            _ => failed.push(task),
+        }
+    }
     axum::response::Json(json!({
         "active": active,
         "pending": pending,
         "completed": completed,
+        "cancelled": cancelled,
         "failed": failed,
     }))
 }
