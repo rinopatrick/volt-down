@@ -1,3 +1,5 @@
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+
 # VoltDown
 
 High-performance Rust download manager with chunked concurrency, resume support, and stealth mode.
@@ -111,3 +113,13 @@ cargo fmt --all
 cargo check --workspace
 cargo test --workspace
 ```
+
+## Production-readiness status
+
+Current state: **engineering sample / pre-production**.
+
+Recommended next steps:
+1. Add CI checks (tests + lint) on every push/PR
+2. Add release/versioning policy
+3. Add deployment/runtime hardening docs
+4. Add monitoring and operational runbook
